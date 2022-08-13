@@ -144,7 +144,7 @@ def opencv_wrapper(file_data, output_path, operation):
         img = cv2.imread(file_data['path'])  # original image
         result = None  # result image
         if mode == "shrink":
-            if result := shrink(img) is not None:
+            if (result := shrink(img)) is not None:
                 result = upscale_image(result)
         elif mode == "upscale":
             result = upscale_image(img)
