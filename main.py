@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+from asyncio.log import logger
 from pathlib import Path
 from cmath import e, log
 import datetime
@@ -12,7 +13,7 @@ import csv
 import cv2
 import logging
 from tqdm import tqdm
-
+import urllib.request
 # max numbers of pixels of the image to avoid out of memory exception
 MAX_MATRIX_SIZE = 3500000
 
@@ -68,7 +69,7 @@ def get_image_size(file):
 
 
 def export_files_data(files_data, output_path):
-    with open('files.csv', 'w') as csvfile:
+    with open(os.path.abspath(f'{output_path}files.csv'), 'w') as csvfile:
         fieldnames = ['path', 'filename', 'type', 'size', 'width', 'height']
         writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
         writer.writeheader()
@@ -117,6 +118,23 @@ def denoise_image(img: cv2.Mat):
     except Exception as e:
         logging.error(f"Error: {e}")
         return None
+
+
+def file_exists(path):
+    return os.path.isfile(path)
+
+
+def download_models():
+    try:
+        make_path("models/")
+        if not file_exists("models/EDSR_x4.pb"):
+            logging.info("Downloading models")
+            urllib.request.urlretrieve(
+                "https://github.com/Saafke/EDSR_Tensorflow/raw/master/models/EDSR_x4.pb", "models/EDSR_x4.pb")
+
+    except Exception as e:
+        logging.critical(f"Could not download models, {e}")
+        print(f"Could not download models, {e}")
 
 
 def opencv_wrapper(file_data, output_path, operation):
@@ -171,6 +189,8 @@ if __name__ == "__main__":
     logging.info(f"Found {len(file_list)} files")
     print(f"Found {len(file_list)} files")
     files_data = get_files_data(file_list, path)
+
+    download_models()
 
     # export file_data to csv
     # completely unnecesary but why not
